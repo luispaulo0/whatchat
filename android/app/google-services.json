@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "888897768444",
+    "project_id": "whatchat-707e6",
+    "storage_bucket": "whatchat-707e6.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:888897768444:android:c23f24e3b48db3a9488079",
+        "android_client_info": {
+          "package_name": "com.example.whatchat"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "888897768444-vg15n5lijje5pur6k23ge8776s8k4f7n.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDN83_k_5PVPENJxv_M_CM2A-0zSY6rcM4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "888897768444-vg15n5lijje5pur6k23ge8776s8k4f7n.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
