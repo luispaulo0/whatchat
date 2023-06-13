@@ -1,34 +1,35 @@
 import 'dart:io';
 
 import 'package:audioplayers/audioplayers.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:whatchat/chats/data/datasources/select_audio.dart';
-import 'package:whatchat/chats/data/datasources/select_image.dart';
-import 'package:whatchat/chats/data/datasources/select_video.dart';
-import 'package:whatchat/chats/data/datasources/upload_audio.dart';
-import 'package:whatchat/chats/data/datasources/upload_image.dart';
-import 'package:whatchat/chats/data/datasources/upload_video.dart';
 import 'package:video_player/video_player.dart';
+import 'package:whatchat/chats/domain/entities/mensaje.dart';
+import 'package:whatchat/chats/presentation/usecases.dart';
 
 class ChatPage extends StatefulWidget {
-  ChatPage({Key? key}) : super(key: key);
+  final UseCases useCases;
+
+  ChatPage({required this.useCases});
 
   @override
-  State<ChatPage> createState() => _ChatPageState();
+  _ChatPageState createState() => _ChatPageState();
 }
 
 class _ChatPageState extends State<ChatPage> {
   VideoPlayerController? controllerVideo;
   AudioPlayer? controllerAudio;
   TextEditingController mensaje = TextEditingController(text: '');
-  File? imagen_to_upload;
-  File? video_to_upload;
-  File? audio_to_upload;
+  File? _getImg;
+  File? _getVideo;
+  File? _getAudio;
   bool isAudioPlaying = false;
   bool? uploaded;
   bool? uploadedV;
   bool? uploadA;
-
+  File? img;
+  // File? video;
+  File? audio;
   @override
   void dispose() {
     super.dispose();
@@ -36,6 +37,72 @@ class _ChatPageState extends State<ChatPage> {
     controllerAudio?.dispose();
   }
 
+  Future<void> _getAudioFile() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: ['mp3'],
+    );
+    if (result != null) {
+      _getAudio = File(result.files.single.path!);
+      setState(() {
+        controllerAudio?.dispose();
+        audio = File(_getAudio!.path);
+        controllerAudio = AudioPlayer();
+      });
+      if (audio != null) {
+        String audioPath = audio!.path;
+        controllerAudio!.play(UrlSource(audioPath));
+        setState(() {
+          isAudioPlaying = true;
+        });
+      }
+    }
+  }
+
+  Future<void> _getImgFile() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: FileType.image,
+    );
+    if (result != null) {
+      _getImg = File(result.files.single.path!);
+      img = File(_getImg!.path);
+    }
+  }
+
+  Future<void> _getVideoFile() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: FileType.video,
+    );
+    if (result != null) {
+      _getVideo = File(result.files.single.path!);
+      setState(() {
+        controllerVideo?.dispose();
+        controllerVideo = VideoPlayerController.file(File(_getVideo!.path));
+      });
+      await controllerVideo!.initialize();
+      setState(() {});
+    }
+  }
+
+  Future<void> _enviarMensaje() async {
+    final mensaje = Mensaje(
+      imagenFile: _getImg,
+      videoFile: _getVideo,
+      audioFile: _getAudio,
+    );
+
+    if (widget.useCases.enviarMensajeUseCase != null) {
+      await widget.useCases.enviarMensajeUseCase?.execute(mensaje);
+    }
+
+    setState(() {
+      _getImg = null;
+      _getVideo = null;
+      _getAudio = null;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
     double screenHeight = MediaQuery.of(context).size.height;
@@ -48,7 +115,7 @@ class _ChatPageState extends State<ChatPage> {
           children: [
             Column(
               children: [
-                if (imagen_to_upload != null) Image.file(imagen_to_upload!),
+                if (img != null) Image.file(img!),
                 if (controllerVideo != null)
                   AspectRatio(
                     aspectRatio: controllerVideo!.value.aspectRatio,
@@ -63,7 +130,7 @@ class _ChatPageState extends State<ChatPage> {
                       child: VideoPlayer(controllerVideo!),
                     ),
                   ),
-                if (audio_to_upload != null)
+                if (audio != null)
                   GestureDetector(
                     onTap: () {
                       setState(() {
@@ -91,12 +158,7 @@ class _ChatPageState extends State<ChatPage> {
                   Padding(
                     padding: const EdgeInsets.only(left: 10),
                     child: IconButton(
-                        onPressed: () async {
-                          final imagen = await getImage();
-                          setState(() {
-                            imagen_to_upload = File(imagen!.path);
-                          });
-                        },
+                        onPressed: _getImgFile,
                         icon: const Icon(
                           Icons.image,
                           size: 40,
@@ -106,24 +168,7 @@ class _ChatPageState extends State<ChatPage> {
                   Padding(
                     padding: const EdgeInsets.only(left: 5, right: 5),
                     child: IconButton(
-                        onPressed: () async {
-                          if (controllerVideo != null &&
-                              controllerVideo!.value.isInitialized) {
-                            VideoPlayer(controllerVideo!);
-                          } else {
-                            // Mostrar un indicador de carga u otro mensaje mientras el video se está inicializando
-                            CircularProgressIndicator();
-                          }
-                          final video = await getVideo();
-                          setState(() {
-                            controllerVideo?.dispose();
-                            video_to_upload = File(video!.path);
-                            controllerVideo =
-                                VideoPlayerController.file(File(video.path));
-                          });
-                          await controllerVideo!.initialize();
-                          setState(() {});
-                        },
+                        onPressed: _getVideoFile,
                         icon: const Icon(
                           Icons.video_camera_back_outlined,
                           size: 40,
@@ -133,21 +178,7 @@ class _ChatPageState extends State<ChatPage> {
                   Padding(
                       padding: const EdgeInsets.only(left: 1.0),
                       child: IconButton(
-                          onPressed: () async {
-                            final audio = await getAudio();
-                            setState(() {
-                              controllerAudio?.dispose();
-                              audio_to_upload = File(audio!.path);
-                              controllerAudio = AudioPlayer();
-                            });
-                            if (audio_to_upload != null) {
-                              String audioPath = audio_to_upload!.path;
-                              controllerAudio!.play(UrlSource(audioPath));
-                              setState(() {
-                                isAudioPlaying = true;
-                              });
-                            }
-                          },
+                          onPressed: _getAudioFile,
                           icon: const Icon(
                             Icons.mic_none_sharp,
                             size: 40,
@@ -164,30 +195,7 @@ class _ChatPageState extends State<ChatPage> {
                   Padding(
                     padding: const EdgeInsets.only(left: 5),
                     child: IconButton(
-                        onPressed: () async {
-                          if (imagen_to_upload != null) {
-                            uploaded = await uploadImage(imagen_to_upload!);
-                             ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                    content: Text(
-                                        'El archivo se envio correctamente')));
-                          }
-                          if (video_to_upload != null) {
-                            uploadedV = await uploadVideo(video_to_upload!);
-                             ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                    content: Text(
-                                        'El archivo se envio correctamente')));
-                          }
-                          if (audio_to_upload != null) {
-                            uploadA = await uploadAudio(audio_to_upload!);
-                             ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                    content: Text(
-                                        'El archivo se envio correctamente')));
-                          }
-                          return;
-                        },
+                        onPressed: _enviarMensaje,
                         icon: const Icon(
                           Icons.send,
                           size: 40,
