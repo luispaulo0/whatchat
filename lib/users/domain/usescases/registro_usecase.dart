@@ -5,7 +5,7 @@ class RegisterUser {
   final Register register;
   RegisterUser(this.register);
   
-  Future<User> execute() async {
-    return await register.post();
+  Future<String> execute(User user) async {
+    return await register.post(user);
   }
 }

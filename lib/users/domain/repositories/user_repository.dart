@@ -1,7 +1,7 @@
 import '../entities/user.dart';
 
 abstract class Register {
-  Future<User> post();
+  Future<String> post(User user);
 }
 
 
