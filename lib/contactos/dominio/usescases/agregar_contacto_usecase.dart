@@ -1,12 +1,12 @@
 import 'package:whatchat/contactos/dominio/entities/contacto.dart';
 import '../repository/contacto_repsository.dart';
 
-
 class NewContac {
-  final NuevoContacto nuevoContacto;
+  final ContactoRepositories nuevoContacto;
 
-  NewContac(this.nuevoContacto);
-  Future<Contacto> execute() async {
-    return await nuevoContacto.post();
+  NewContac({required this.nuevoContacto});
+
+  Future<void> execute(String phone, String apodo) async {
+    return await nuevoContacto.post(phone, apodo);
   }
 }

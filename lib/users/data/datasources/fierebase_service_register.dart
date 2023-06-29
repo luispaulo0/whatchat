@@ -1,18 +1,27 @@
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:whatchat/users/domain/entities/user.dart' as Usern;
 
 abstract class PhoneAuthRepository {
-  Future<void> verifyPhoneNumber(String phoneNumber);
-  Future<void> signInWithPhoneNumber(String verificationId, String smsCode);
+  Future<void> verifyPhoneNumber(String username, String phoneNumber);
+  Future<bool> signInWithPhoneNumber(String smsCode);
+  Future<String> listaUsers();
+  Future<bool> existUser(String phoneNumber);
 }
 
 class FirebasePhoneAuthRepository implements PhoneAuthRepository {
-  final FirebaseAuth _firebaseAuth;
+  final FirebaseAuth firebaseAuth;
+  FirebaseFirestore db = FirebaseFirestore.instance;
+  String? verificationId;
+  String? username;
+  String? phone;
+  String? usuarios;
 
-  FirebasePhoneAuthRepository(this._firebaseAuth);
+  FirebasePhoneAuthRepository({required this.firebaseAuth});
 
   @override
-  Future<void> verifyPhoneNumber(String phoneNumber) async {
-    await _firebaseAuth.verifyPhoneNumber(
+  Future<void> verifyPhoneNumber(String username, String phoneNumber) async {
+    await firebaseAuth.verifyPhoneNumber(
       phoneNumber: phoneNumber,
       verificationCompleted: (PhoneAuthCredential credential) {
         // El número de teléfono se verificó automáticamente
@@ -20,9 +29,12 @@ class FirebasePhoneAuthRepository implements PhoneAuthRepository {
       },
       verificationFailed: (FirebaseAuthException e) {
         // Ocurrió un error durante la verificación
-        print(e.message);
+        print('No se pudo verificar este numero de telefono $e');
       },
       codeSent: (String verificationId, int? resendToken) {
+        this.verificationId = verificationId;
+        this.username = username;
+        phone = phone;
         // El código de verificación se envió con éxito al número de teléfono
         // Puedes mostrar una pantalla para que el usuario ingrese el código
         // y luego llamar a `signInWithPhoneNumber` con `verificationId` y el código ingresado
@@ -36,22 +48,56 @@ class FirebasePhoneAuthRepository implements PhoneAuthRepository {
   }
 
   @override
-  Future<void> signInWithPhoneNumber(String verificationId, String smsCode) async {
+  Future<bool> signInWithPhoneNumber(String smsCode) async {
     try {
       // Crea una instancia de PhoneAuthCredential utilizando el `verificationId` y el `smsCode`
       PhoneAuthCredential credential = PhoneAuthProvider.credential(
-        verificationId: verificationId,
+        verificationId: verificationId!,
         smsCode: smsCode,
       );
 
       // Autentica al usuario con el credential
-      UserCredential userCredential = await _firebaseAuth.signInWithCredential(credential);
+      UserCredential userCredential =
+          await firebaseAuth.signInWithCredential(credential);
 
+      // Obtiene el ID de usuario
+
+      // Guarda los datos del usuario en Firestore
+      final newUser =
+          await db.collection('users').add({'phone': phone, 'user': username});
+
+      // Asigna el ID del usuario a la variable "usuarios"
+      usuarios = newUser.id;
+
+      return true;
       // El usuario se autenticó con éxito
       // Puedes acceder a `userCredential.user` para obtener información del usuario
     } catch (e) {
       // Ocurrió un error durante la autenticación
       print(e.toString());
+      return false;
     }
+  }
+
+  @override
+  Future<bool> existUser(String phoneNumber) async {
+    CollectionReference collectionReferenceUserExist = db.collection('users');
+    Query query =
+        collectionReferenceUserExist.where('phone', isEqualTo: phoneNumber);
+
+    QuerySnapshot querySnapshot = await query.get();
+
+    if(querySnapshot.docs.isEmpty) {
+      print('No se encontraron usuarios con ese número de teléfono');
+      return false;
+    } else {
+      return true;
+    }
+  }
+
+  Future<String> listaUsers() async {
+    String? listaUsuarios;
+    listaUsuarios = usuarios;
+    return listaUsuarios!;
   }
 }
