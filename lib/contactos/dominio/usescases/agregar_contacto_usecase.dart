@@ -6,7 +6,7 @@ class NewContac {
 
   NewContac({required this.nuevoContacto});
 
-  Future<void> execute(String phone, String apodo) async {
+  Future<bool> execute(String phone, String apodo) async {
     return await nuevoContacto.post(phone, apodo);
   }
 }

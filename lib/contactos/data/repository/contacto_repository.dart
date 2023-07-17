@@ -7,8 +7,9 @@ class ContactoRepositoryImpl implements ContactoRepositories {
   final FirebaseServiceContacto firebaseServiceContacto;
   ContactoRepositoryImpl({required this.firebaseServiceContacto});
 
-  Future<void> post(String phone, String apodo) async {
-    await firebaseServiceContacto.searchUser(phone, apodo);
+  Future<bool> post(String phone, String apodo) async {
+    bool respuesta = await firebaseServiceContacto.searchUser(phone, apodo);
+    return respuesta;
   }
 
   Future<List<Map<String, dynamic>>> show() async {
@@ -26,5 +27,4 @@ class ContactoRepositoryImpl implements ContactoRepositories {
       return null;
     }
   }
-
 }

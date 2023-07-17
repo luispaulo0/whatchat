@@ -6,7 +6,7 @@ class EnviarMensajeUseCase {
 
   EnviarMensajeUseCase({required this.repository});
 
-  Future<String> execute(Mensaje mensaje) {
-    return repository.enviarMensaje(mensaje);
+  Future<String> execute(String uidChat, String emisorId,String receptorId,Mensaje mensaje) {
+    return repository.enviarMensaje(uidChat,emisorId,receptorId,mensaje);
   }
 }

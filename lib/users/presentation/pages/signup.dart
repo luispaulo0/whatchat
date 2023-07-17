@@ -38,21 +38,22 @@ class _SignupState extends State<Signup> {
   }
 
   Future<void> _validar() async {
-    final bool nuevoUser;
+    final String? nuevoUser;
+    String? idUser;
     final sms = codigo.text;
     final phone = phoneNumber.text;
     try {
       nuevoUser = await widget.verificar.execute(phone);
-      if (nuevoUser == true) {
-        print("entre aca");
+      if (nuevoUser != null) {
+        print("Usuario Verificado");
         setState(() {
           Navigator.of(context).pushNamed('/chat');
         });
       } else {
-        print("PASE ACAAAAAAAAAAAAAAAAAAAAA");
-        await widget.smsValidation.execute(sms);
+        idUser = await widget.smsValidation.execute(sms);
         setState(() {
-          Navigator.of(context).pushNamed('/chat');
+          Navigator.of(context)
+              .pushNamed('/chat', arguments: {'idUser': idUser});
         });
       }
     } catch (e) {

@@ -2,6 +2,6 @@ import '../entities/user.dart';
 
 abstract class Register {
   Future<String> post(User user);
-  Future<bool> sms(String sms);
-  Future<bool> exist(String phone);
+  Future<String?> sms(String sms);
+  Future<String?> exist(String phone);
 }

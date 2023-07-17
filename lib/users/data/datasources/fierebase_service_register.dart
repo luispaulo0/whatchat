@@ -4,9 +4,8 @@ import 'package:whatchat/users/domain/entities/user.dart' as Usern;
 
 abstract class PhoneAuthRepository {
   Future<void> verifyPhoneNumber(String username, String phoneNumber);
-  Future<bool> signInWithPhoneNumber(String smsCode);
-  Future<String> listaUsers();
-  Future<bool> existUser(String phoneNumber);
+  Future<String?> signInWithPhoneNumber(String smsCode);
+  Future<String?> existUser(String phoneNumber);
 }
 
 class FirebasePhoneAuthRepository implements PhoneAuthRepository {
@@ -48,7 +47,7 @@ class FirebasePhoneAuthRepository implements PhoneAuthRepository {
   }
 
   @override
-  Future<bool> signInWithPhoneNumber(String smsCode) async {
+  Future<String?> signInWithPhoneNumber(String smsCode) async {
     try {
       // Crea una instancia de PhoneAuthCredential utilizando el `verificationId` y el `smsCode`
       PhoneAuthCredential credential = PhoneAuthProvider.credential(
@@ -69,35 +68,29 @@ class FirebasePhoneAuthRepository implements PhoneAuthRepository {
       // Asigna el ID del usuario a la variable "usuarios"
       usuarios = newUser.id;
 
-      return true;
+      return usuarios;
       // El usuario se autenticó con éxito
       // Puedes acceder a `userCredential.user` para obtener información del usuario
     } catch (e) {
       // Ocurrió un error durante la autenticación
       print(e.toString());
-      return false;
+      return null;
     }
   }
 
   @override
-  Future<bool> existUser(String phoneNumber) async {
+  Future<String?> existUser(String phoneNumber) async {
     CollectionReference collectionReferenceUserExist = db.collection('users');
-    Query query =
-        collectionReferenceUserExist.where('phone', isEqualTo: phoneNumber);
+    Query query = collectionReferenceUserExist.where('phone', isEqualTo: phoneNumber);
 
     QuerySnapshot querySnapshot = await query.get();
 
-    if(querySnapshot.docs.isEmpty) {
-      print('No se encontraron usuarios con ese número de teléfono');
-      return false;
+    if (querySnapshot.docs.isNotEmpty) {
+      String? idUser = querySnapshot.docs[0].id;
+      return idUser;
     } else {
-      return true;
+      return null;
     }
   }
 
-  Future<String> listaUsers() async {
-    String? listaUsuarios;
-    listaUsuarios = usuarios;
-    return listaUsuarios!;
-  }
 }

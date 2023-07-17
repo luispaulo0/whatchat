@@ -3,8 +3,11 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:whatchat/chats/data/datasources/firebase_service_storage.dart';
 import 'package:whatchat/chats/presentation/pages/chat_home.dart';
+import 'package:whatchat/chats/presentation/pages/iniciar_conversacion_page.dart';
+import 'package:whatchat/chats/presentation/providers/nuevo_contacto_provider.dart';
 import 'package:whatchat/chats/presentation/usecases.dart';
 import 'package:whatchat/contactos/data/datasource/firebase_service_contacto.dart';
 import 'package:whatchat/users/data/datasources/fierebase_service_register.dart';
@@ -31,24 +34,33 @@ class MyApp extends StatelessWidget {
     final UseCases useCases = UseCases(
         FirebaseServiceStorageImpl(storage: FirebaseStorage.instance),
         FirebaseServiceContactoImpl(db: FirebaseFirestore.instance));
-    return MaterialApp(
-      title: 'Material App',
-      initialRoute: '/',
-      routes: {
-        // '/':(context) => ChatHome()
-        // '/': (context) => Signup(
-        //   registerUser: useCaseConfigUser.registerUser!,
-        //   smsValidation: useCaseConfigUser.smsValidation!,
-        //   verificar: useCaseConfigUser.verificacion!,
-        // ),
-        '/': (context) => ChatHome(
-              useCases: useCases,
-            ),
-
-        '/ChatPage': (context) => ChatPage(
-              useCases: useCases,
-            )
-      },
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (_)=>NuevoContactoProvider(useCases: useCases)
+        )
+      ],
+      child: MaterialApp(
+        title: 'Material App',
+        initialRoute: '/',
+        routes: {
+          // '/': (context) => Signup(
+          //   registerUser: useCaseConfigUser.registerUser!,
+          //   smsValidation: useCaseConfigUser.smsValidation!,
+          //   verificar: useCaseConfigUser.verificacion!,
+          // ),
+          '/': (context) => ChatHome(
+                useCases: useCases,
+              ),
+    
+          '/ChatPage': (context) => ChatPage(
+                useCases: useCases,
+              ),
+          '/inciarConversacion': (context) => IniciarConversacion(
+                useCases: useCases,
+              )
+        },
+      ),
     );
   }
 }

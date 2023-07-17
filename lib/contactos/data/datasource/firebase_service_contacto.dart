@@ -6,7 +6,7 @@ import 'package:whatchat/users/data/datasources/fierebase_service_register.dart'
 import '../../../users/domain/entities/user.dart' as userEntitie;
 
 abstract class FirebaseServiceContacto {
-  Future<void> searchUser(String phone, String apodo);
+  Future<bool> searchUser(String phone, String apodo);
   Future<List<Map<String, dynamic>>> getContactos();
 }
 
@@ -18,7 +18,7 @@ class FirebaseServiceContactoImpl implements FirebaseServiceContacto {
   FirebaseServiceContactoImpl({required this.db});
 
   @override
-  Future<void> searchUser(String phone, String apodo) async {
+  Future<bool> searchUser(String phone, String apodo) async {
     // String? uid;
     String uid = 'AztlXcqdaW35CkxesKDz';
     CollectionReference collectionReferenceUsers = db.collection('users');
@@ -27,6 +27,7 @@ class FirebaseServiceContactoImpl implements FirebaseServiceContacto {
     query.get().then((QuerySnapshot querySnapshot) async {
       if (querySnapshot.docs.isEmpty) {
         print('No se encontraron usuarios con ese número de teléfono');
+        return false; 
       }
       // uid = await userRepository?.listaUsers();
       querySnapshot.docs.forEach((DocumentSnapshot elemenet) async {
@@ -35,10 +36,12 @@ class FirebaseServiceContactoImpl implements FirebaseServiceContacto {
             .doc(uid)
             .collection('contactos')
             .add({'apodo': apodo, 'phone': elemenet['phone']});
+        
       });
     }).catchError((error) {
       print('Error obteniendo usuarios: $error');
     });
+    return true;
   }
 
   Future<List<Map<String, dynamic>>> getContactos() async {
@@ -52,8 +55,25 @@ class FirebaseServiceContactoImpl implements FirebaseServiceContacto {
       for (var element in queryContactos.docs) {
         final Map<String, dynamic> data =
             element.data() as Map<String, dynamic>;
-        final contac = {'apodo': data['apodo'], 'phone': data['phone'], 'uidContacto':element.id};
-        contactosM.add(contac);
+        CollectionReference usuario = db.collection('users');
+        Query usuarioQuery = usuario.where('phone', isEqualTo: data['phone']);
+        QuerySnapshot usuarioSnapshot = await usuarioQuery.get();
+        if (usuarioSnapshot.docs.isNotEmpty) {
+          print('resultado de la bd sobre idContacto');
+          print(usuarioSnapshot.docs[0].id);
+          final contac = {
+            'apodo': data['apodo'],
+            'phone': data['phone'],
+            'uidContacto': usuarioSnapshot.docs[0].id
+          };
+          contactosM.add(contac);
+        } else {
+          final contac = {
+            'apodo': data['apodo'],
+            'phone': data['phone'],
+          };
+          contactosM.add(contac);
+        }
       }
 
       return contactosM;

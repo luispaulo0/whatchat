@@ -14,7 +14,7 @@ class SmsValidation {
   final Register register;
   SmsValidation({required this.register});
 
-  Future<bool> execute(String sms) async {
+  Future<String?> execute(String sms) async {
     return await register.sms(sms);
   }
 }

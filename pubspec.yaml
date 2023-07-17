@@ -43,6 +43,12 @@ dependencies:
   audioplayers: ^4.1.0
   firebase_auth: ^4.6.3
   cloud_firestore: ^4.0.0
+  flutter_speed_dial: ^3.0.5
+  cached_network_image: ^3.0.0
+  syncfusion_flutter_pdfviewer: ^20.4.54
+  provider: ^6.0.5
+  google_maps_flutter: ^2.3.0
+  location: ^5.0.0
 
 dev_dependencies:
   flutter_test:

@@ -19,32 +19,32 @@ class UserRepositoryImpl implements Register {
     return 'error';
   }
 
-  Future<bool> sms(String sms) async {
-    bool users;
+  Future<String?> sms(String sms) async {
+    String? users;
     users = await _verifySms(sms);
     return users;
   }
 
-  Future<bool> _verifySms(String sms) async {
-    bool users;
+  Future<String?> _verifySms(String sms) async {
+    String? users;
     if (sms != null) {
       users = await phoneAuthRepository.signInWithPhoneNumber(sms);
       return users;
     } else {
       print("no se pudo verificar el número");
-      return false;
+      return null;
     }
   }
 
   @override
-  Future<bool> exist(String phone) async {
-    bool existe;
+  Future<String?> exist(String phone) async {
+    String? existe;
     try {
       existe = await phoneAuthRepository.existUser(phone);
       return existe;
     } catch (error) {
       print('error obtenido existencia user:$error');
-      return false;
+      return null;
     }
   }
 }
